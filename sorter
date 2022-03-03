@@ -18,7 +18,7 @@ fi
 
 HEIGHT=15
 WIDTH=40
-CHOICE_HEIGHT=4
+CHOICE_HEIGHT=6
 BACKTITLE="Pinball to Altsound Converter"
 TITLE="Folder to parse"
 MENU="Choose one of the following options:"
@@ -60,9 +60,19 @@ case $CHOICE in
 
 esac
 
+if [[ $CHOICE == "Quit" ]]
+        then
+        clear
+	echo "Altsound contents"
+	ls -la Altsound
+        exit
+fi
+
+
+
 HEIGHT=15
 WIDTH=40
-CHOICE_HEIGHT=4
+CHOICE_HEIGHT=3
 BACKTITLE="Pinball to Altsound Converter"
 TITLE="Sound file type"
 MENU="Choose one of the following options:"
@@ -92,15 +102,15 @@ case $CHOICE2 in
 
 esac
 
-
-
 echo $CHOICE
 clear
 
 #Exit if choice is to quit
 
-if [[ $CHOICE == "Quit" || $CHOICE2 == "Quit" ]]
+if [[ $CHOICE2 == "Quit" ]]
 	then
+	echo "Altsound contents"
+	ls -la Altsound
 	clear
 	exit
 fi
@@ -112,7 +122,17 @@ TYPE="${CHOICE2}"
 INPUT=altsound.csv
 OLDIFS=$IFS
 IFS=','
-mkdir tmp_$FOLDER
+
+#Create folders
+
+if [ ! -d tmp_$FOLDER ]; then
+  mkdir -p tmp_$FOLDER;
+fi
+
+if [ ! -d Altsound ]; then
+  mkdir -p Altsound;
+  cp altsound.csv Altsound
+fi
 
 #Parse files matching folder names to csv file names
 
@@ -154,8 +174,12 @@ done < $INPUT
 IFS=$OLDIFS
 
 #List newly generated consolodated files
-
+rsync -a tmp_$FOLDER/ Altsound
 echo -e "\e[42m  ###########################   \e[0m"
 echo -e "\e[42m  ###   FILES GENERATED   ###   \e[0m"
 echo -e "\e[42m  ###########################   \e[0m"
 ls -la tmp_$FOLDER
+
+read -p "Press any key to continue... " -n1 -s
+
+./$(basename $0) && exit
