@@ -4,6 +4,25 @@
 ####  Transfer and associate .wav files with Altsound.csv  ####
 ############################## by necro_nemesis ###############
 
+# zip compression function
+
+compress_folder ()
+{
+    local folder name
+    echo "Please enter a new profile folder name:"
+    read profilename
+    folder="Altsound"
+    mkdir $profilename
+    cp -R Altsound/* $profilename
+
+# check whether target file exists and advise:
+
+    test -f "$profilename".zip && echo "Altsound zip profile will be overwritten"
+    #cd $profilename
+    zip -r $profilename.zip $profilename
+    rm -r $profilename
+}
+
 # if dialog is not install prompt to install it
 
 REQUIRED_PKG="dialog"
@@ -26,9 +45,9 @@ fi
 
 # Open dialog and prompt for input
 
-HEIGHT=15
-WIDTH=50
-CHOICE_HEIGHT=7
+HEIGHT=18
+WIDTH=60
+CHOICE_HEIGHT=9
 BACKTITLE="Pinball Sound Folders to Altsound Converter"
 TITLE="Folder to parse"
 MENU="Choose one of the following options:"
@@ -39,6 +58,8 @@ OPTIONS=(music "Parse music folder"
 	 single "Parse single folder"
          voice "Parse voice folder"
 	 convert "Convert Altsound .ogg to .wav"
+	 clean_csv "Clean out duplicate address entries"
+	 compress "Compress Altsound to zip"
 	 Quit "Exit program")
 
 CHOICE=$(dialog --no-cancel \
@@ -52,21 +73,20 @@ CHOICE=$(dialog --no-cancel \
 
 case $CHOICE in
         "music")
-            echo "parsing music"
            ;;
         "jingle")
-            echo "parsing jingle"
             ;;
         "sfx")
-            echo "parsing sfx"
             ;;
         "single")
-            echo "parsing single"
             ;;
         "voice")
-            echo "parsing voice"
             ;;
 	"convert")
+	    ;;
+	"clean_csv")
+            ;;
+	"compress")
 	    ;;
         "Quit")
             ;;
@@ -98,6 +118,22 @@ if [[ $CHOICE == "convert" ]]
 	./$(basename $0) && exit
 fi
 
+if [[ $CHOICE == "clean_csv" ]]
+        then
+        cd Altsound
+        sort -t, -u -k1,1 altsound.csv > newsound.csv
+        mv newsound.csv altsound.csv
+        rm newsound.csv
+        cd ..
+       ./$(basename $0) && exit
+fi
+
+if [[ $CHOICE == "compress" ]]
+        then
+        clear
+        compress_folder
+       ./$(basename $0) && exit
+fi
 
 HEIGHT=15
 WIDTH=40
@@ -134,7 +170,7 @@ esac
 echo $CHOICE
 clear
 
-# Exit if choice is to quit
+#Exit if choice is to quit
 
 if [[ $CHOICE2 == "Quit" ]]
 	then
@@ -163,12 +199,10 @@ if [ ! -d Altsound ]; then
   cp altsound.csv Altsound
 fi
 
-
-
-# Parse files matching folder names to csv file names
+#Parse files matching folder names to csv file names
 
 [ ! -f $INPUT ] && { echo "$INPUT file not found"; exit 99; }
-while read ID CHANNEL DUCK GAIN LOOP STOP NAME FNAME
+while read ID CHANNEL DUCK GAIN LOOP STOP NAME FNAME GROUP SHAKER SERIAL PRELOAD STOPCMD
 do
         holder="$(echo "$FNAME" | sed -n 's/[^-]*-//p')"
 	filename="$(echo "$holder" | sed 's/\.[^.]*$//')"
@@ -180,7 +214,7 @@ find  ./$FOLDER -type d -mindepth 1 -maxdepth 1 | while read folder; do
 	then
 for file in ./$folder/*
 
-# On match write file to new "tmp_*" using csv matched name
+#On match write file to new "tmp_*" using csv matched name
 
 do
    if [[ $file == *.$CHOICE2 ]]
