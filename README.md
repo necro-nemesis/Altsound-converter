@@ -10,6 +10,6 @@ Conversion tool for converting file based sounds to Altsound format
 - To create a full altsound profile parse all 5 file types (music, jingle, sfx, single and voice).
 - Sound profile will be saved to /Altsound folder and include a copy of the altsound.csv file used to parse with.
 - If you wish to convert the completed Altsound profile in the /Altsound folder, lastly use the "convert" option once all folders are parsed.
-![](https://i.imgur.com/2ZrhaiH.png)
+![](https://i.imgur.com/X429MHB.jpg)
 ![](https://i.imgur.com/2ZrhaiH.png)
 ![](https://i.imgur.com/2ZrhaiH.png)
