@@ -4,7 +4,7 @@
 ####  Transfer and associate .wav files with Altsound.csv  ####
 ############################## by necro_nemesis ###############
 
-#if dialog is not install prompt to install it
+# if dialog is not install prompt to install it
 
 REQUIRED_PKG="dialog"
 PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $REQUIRED_PKG|grep "install ok installed")
@@ -24,7 +24,7 @@ if [ "" = "$PKG_OK" ]; then
   sudo apt-get --yes install $REQUIRED_PKG
 fi
 
-#Open dialog and prompt for input
+# Open dialog and prompt for input
 
 HEIGHT=15
 WIDTH=50
@@ -134,7 +134,7 @@ esac
 echo $CHOICE
 clear
 
-#Exit if choice is to quit
+# Exit if choice is to quit
 
 if [[ $CHOICE2 == "Quit" ]]
 	then
@@ -165,7 +165,7 @@ fi
 
 
 
-#Parse files matching folder names to csv file names
+# Parse files matching folder names to csv file names
 
 [ ! -f $INPUT ] && { echo "$INPUT file not found"; exit 99; }
 while read ID CHANNEL DUCK GAIN LOOP STOP NAME FNAME
@@ -180,7 +180,7 @@ find  ./$FOLDER -type d -mindepth 1 -maxdepth 1 | while read folder; do
 	then
 for file in ./$folder/*
 
-#On match write file to new "tmp_*" using csv matched name
+# On match write file to new "tmp_*" using csv matched name
 
 do
    if [[ $file == *.$CHOICE2 ]]
