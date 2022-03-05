@@ -8,19 +8,17 @@
 
 compress_folder ()
 {
-    local folder name
-    echo "Please enter a new profile folder name:"
-    read profilename
-    folder="Altsound"
-    mkdir $profilename
-    cp -R Altsound/* $profilename
-
-# check whether target file exists and advise:
-
-    test -f "$profilename".zip && echo "Altsound zip profile will be overwritten"
-    #cd $profilename
-    zip -r $profilename.zip $profilename
-    rm -r $profilename
+#    local folder name
+profilename=$(\
+  dialog --title "Create Profile" \
+         --inputbox "Enter new profile name:" 8 40 \
+  3>&1 1>&2 2>&3 3>&- \
+	     )
+mkdir $profilename
+  folder="Altsound"
+  cp -R Altsound/* $profilename
+  (zip -qr - $profilename | pv -n -s $(du -sb $profilename | awk '{print $1}') > $profilename.zip) 2>&1 | dialog --gauge "Writing sound profile to "$profilename".zip" 7 70
+  rm -r $profilename
 }
 
 # if dialog is not install prompt to install it
@@ -36,6 +34,16 @@ fi
 # if ffmpeg is not install prompt to install it
 
 REQUIRED_PKG="ffmpeg"
+PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $REQUIRED_PKG|grep "install ok installed")
+echo Checking for $REQUIRED_PKG: $PKG_OK
+if [ "" = "$PKG_OK" ]; then
+  echo "No $REQUIRED_PKG. Setting up $REQUIRED_PKG."
+  sudo apt-get --yes install $REQUIRED_PKG
+fi
+
+# if pv is not installed prompt to install it
+
+REQUIRED_PKG="pv"
 PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $REQUIRED_PKG|grep "install ok installed")
 echo Checking for $REQUIRED_PKG: $PKG_OK
 if [ "" = "$PKG_OK" ]; then
