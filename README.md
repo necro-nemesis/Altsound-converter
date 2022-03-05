@@ -4,7 +4,7 @@ Conversion tool for converting file based sounds to Altsound format
 ### Linux script for matching folder based sound files to existing altsound.csv files. ###
 - Copy script contents to file and make executable with ```chmod +x sorter```
 - Place the script in a folder with the altsound.csv file and the 5 sound file subfolders.
-- The script will prompt for installation of dialog and ffmpeg packages if they are not previously installed. dialog is required for running the program and ffmpeg for .ogg to .wav conversion.
+- The script will prompt for installation of depnedencies dialog, ffmpeg and pv if they are not previously installed. dialog is required for running the program menu system, ffmpeg for .ogg to .wav conversion and pv for the zip file progress indicator.
 - Select which of the folders you want to parse and the file type being being parsed .ogg or .wav. 
  - Note that most csv and folder files are of .ogg type but can be converted in both cases to support .wav. Ensure that both the csv and folders use the same file types and if not convert one or the other to so they are in common. If you encounter this convert the original altsound.csv from .ogg to .wav with ```sed -i 's/.ogg/.wav/g altsound.csv```. Conversly if you need to convert the altsound.csv from .wav to .ogg use ```sed -i 's/.wav/.ogg/g' altsound.csv```
 
