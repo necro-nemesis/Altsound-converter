@@ -112,18 +112,15 @@ fi
 if [[ $CHOICE == "convert" ]]
         then
         clear
-	cd Altsound
-	find -type f -name '*.ogg' -exec \
-	    bash -c 'ffmpeg -acodec libvorbis -i "{}" -acodec pcm_s16le "{}".wav -y \
-	    $(echo "{}" | sed -r 's/.{3}$/wav/')' \;
-	find -type f -name '*.ogg.*' -exec rm {} +
-	find -type f -name '*.ogg' -exec rm {} +
-	sed -i 's/.ogg/.wav/g' altsound.csv
+        cd Altsound
+        for i in *.ogg; do ffmpeg -i "$i" "${i%.*}.wav" -y; done
+        find -type f -name '*.ogg' -exec rm {} +
+        sed -i 's/.ogg/.wav/g' altsound.csv
         echo "Altsound folder contents"
         ls -la
-	cd ..
-	read -p "Press any key to continue... " -n1 -s
-	./$(basename $0) && exit
+        cd ..
+        read -p "Press any key to continue... " -n1 -s
+        ./$(basename $0) && exit
 fi
 
 if [[ $CHOICE == "clean_csv" ]]
