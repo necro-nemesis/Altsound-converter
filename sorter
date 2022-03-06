@@ -18,7 +18,7 @@ mkdir $profilename
   folder="Altsound"
   cp -R Altsound/* $profilename
   (zip -qr - $profilename | pv -n -s $(du -sb $profilename | awk '{print $1}') > $profilename.zip) 2>&1 | dialog --gauge "Writing sound profile to "$profilename".zip" 7 70
-#  rm -r $profilename
+  mv $profilename $profilename.bak
 }
 
 # if dialog is not install prompt to install it
