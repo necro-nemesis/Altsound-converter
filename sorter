@@ -1,4 +1,4 @@
-#!/bin/bash
+##!/bin/bash
 
 ###############################################################
 ####  Transfer and associate .wav files with Altsound.csv  ####
@@ -18,7 +18,7 @@ mkdir $profilename
   folder="Altsound"
   cp -R Altsound/* $profilename
   (zip -qr - $profilename | pv -n -s $(du -sb $profilename | awk '{print $1}') > $profilename.zip) 2>&1 | dialog --gauge "Writing sound profile to "$profilename".zip" 7 70
-  rm -r $profilename
+#  rm -r $profilename
 }
 
 # if dialog is not install prompt to install it
@@ -54,8 +54,8 @@ fi
 # Open dialog and prompt for input
 
 HEIGHT=18
-WIDTH=60
-CHOICE_HEIGHT=9
+WIDTH=65
+CHOICE_HEIGHT=10
 BACKTITLE="Pinball Sound Folders to Altsound Converter"
 TITLE="Folder to parse"
 MENU="Choose one of the following options:"
@@ -65,9 +65,10 @@ OPTIONS=(music "Parse music folder"
 	 sfx "Parse sound effects folder"
 	 single "Parse single folder"
          voice "Parse voice folder"
-	 convert "Convert Altsound .ogg to .wav"
+	 convert "Convert parsed Altsound folder .ogg to .wav"
 	 clean_csv "Clean out duplicate address entries"
-	 compress "Compress Altsound to zip"
+	 compress "Compress Altsound folder to zip"
+	 choose_convert "Choose a folder to convert .ogg to .wav"
 	 Quit "Exit program")
 
 CHOICE=$(dialog --no-cancel \
@@ -96,6 +97,8 @@ case $CHOICE in
             ;;
 	"compress")
 	    ;;
+	"choose_convert")
+	    ;;
         "Quit")
             ;;
 
@@ -112,7 +115,7 @@ fi
 if [[ $CHOICE == "convert" ]]
         then
         clear
-        cd Altsound
+	cd Altsound
         for i in *.ogg; do ffmpeg -i "$i" "${i%.*}.wav" -y; done
         find -type f -name '*.ogg' -exec rm {} +
         sed -i 's/.ogg/.wav/g' altsound.csv
@@ -138,6 +141,27 @@ if [[ $CHOICE == "compress" ]]
         clear
         compress_folder
        ./$(basename $0) && exit
+fi
+
+if [[ $CHOICE == "choose_convert" ]]
+	then
+        clear
+	TARGET=$(dialog --stdout --title "Arrows move cursor / spacebar to select" --dselect ~/ 14 48)
+	exitStatus=$?
+	if [[ $exitStatus != 1 ]]
+	then
+        cwd=$(pwd)
+	cd "$TARGET"
+        for i in *.ogg; do ffmpeg -i "$i" "${i%.*}.wav" -y; done
+        find -type f -name '*.ogg' -exec rm {} +
+        sed -i 's/.ogg/.wav/g' altsound.csv
+        echo "Converted folder contents"
+        ls -la
+        cd "$cwd"
+        read -p "Press any key to continue... " -n1 -s
+        ./$(basename $0) && exit
+	fi
+	./$(basename $0) && exit
 fi
 
 HEIGHT=15
