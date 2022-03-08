@@ -1,8 +1,8 @@
 ##!/bin/bash
 
-########################################################################
-####  Transfer and associate pinball sound files with Altsound.csv  ####
-####################################### by necro_nemesis ###############
+###############################################################################
+####  Transfer and associate pinball folder sound files with Altsound.csv  ####
+############################################## by necro_nemesis ###############
 
 # Sound file Parser function
 
