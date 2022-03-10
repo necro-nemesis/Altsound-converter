@@ -1,0 +1,297 @@
+#!/bin/bash
+
+###############################################################
+####  Transfer and associate .wav files with Altsound.csv  ####
+############################## by necro_nemesis ###############
+## Digger v0.9 ##
+
+# Sound file Parser function
+
+parser ()
+{
+HEIGHT=15
+WIDTH=40
+CHOICE_HEIGHT=3
+BACKTITLE="Pinball Sound Folders to Altsound Converter"
+TITLE="Sound file type"
+MENU="Choose one of the following options:"
+
+OPTIONS=(ogg "Parse for ogg matches"
+	 wav "Parse for wav matches"
+         Quit "Exit program")
+
+CHOICE2=$(dialog --no-cancel \
+                --clear \
+                --backtitle "$BACKTITLE" \
+                --title "$TITLE" \
+                --menu "$MENU" \
+                $HEIGHT $WIDTH $CHOICE_HEIGHT \
+                "${OPTIONS[@]}" \
+                2>&1 >/dev/tty)
+
+case $CHOICE2 in
+
+        "ogg")
+            echo "parsing ogg"
+           ;;
+
+        "wav")
+            echo "parsing wav"
+           ;;
+
+        "Quit")
+		echo "Altsound folder contents"
+		ls -la Altsound
+		clear
+		exit
+            ;;
+
+esac
+
+clear
+
+# test if altsound file exists otherwise create a new one and populate definitions
+
+if [ ! -f Altsound/altsound.csv ]
+then
+    touch Altsound/altsound.csv
+    echo \"ID\",\"CHANNEL\",\"DUCK\",\"GAIN\",\"LOOP\",\"STOP\",\"NAME\",\"FNAME\",\"GROUP\",\"SHAKER\",\"SERIAL\".\"PRELOAD\",\"STOPCMD\" >> Altsound/altsound.csv
+
+fi
+
+
+# Set variables for parse
+
+FOLDER="$1"
+echo "$FOLDER"
+TYPE="${CHOICE2}"
+INPUT=altsound.csv
+OLDIFS=$IFS
+IFS=','
+
+# Create folders
+
+if [ ! -d tmp_$FOLDER ]; then
+  mkdir -p tmp_$FOLDER;
+fi
+
+if [ ! -d Altsound ]; then
+  mkdir -p Altsound;
+fi
+
+# Parse files matching folder names to csv file names
+
+[ ! -f $INPUT ] && { echo "$INPUT file not found"; exit 99; }
+while read ID CHANNEL DUCK GAIN LOOP STOP NAME FNAME GROUP SHAKER SERIAL PRELOAD STOPCMD
+do
+        holder="$(echo "$FNAME" | sed -n 's/[^-]*-//p')"
+	filename="$(echo "$holder" | sed 's/\.[^.]*$//')"
+	writename="$(echo "$FNAME"  | tr -d '"')"
+	filewrite="$(echo "$writename" | sed "s/^[ \t]*//")"
+find  ./$FOLDER -type d -mindepth 1 -maxdepth 1 | while read folder; do
+	foldername="$(echo "$folder" | sed -n 's/[^-]*-//p')"
+   if [[ $filename == $foldername ]] ;
+	then
+for file in ./$folder/*
+
+# On match write file to new "tmp_*" using csv matched name
+
+do
+   if [[ $file == *.$CHOICE2 ]]
+	then
+        newfile="$(echo "$file" | sed 's|.*/||')"
+        filewrite="$(echo "$filewrite" | sed "s/\."$CHOICE2".*/."$CHOICE2"/")"
+	fixedfile="$(echo "$newfile" | sed -e 's/[^A-Za-z0-9._-]/_/g')"
+		if [[ $file != "$(echo ./"$folder"/"$fixedfile")" ]]
+		then
+		mv $file "$folder"/"$fixedfile"
+		fi
+	idtemp="$(echo "$ID" | tr -d '"')"
+	fname="$(echo "$fixedfile" | sed 's/\.[^.]*$//')"
+	indexedfile="$(echo "$fixedfile" | sed -e "s/^/"$idtemp"-/")"
+        cp "$(echo ./"$folder"/"$fixedfile")" ./tmp_$FOLDER/"$indexedfile"
+
+# Generate altsound.cvs enties for file
+#              ID   CHANNEL     DUCK    GAIN    LOOP    STOP        NAME              FNAME          GROUP     SHAKER   SERIAL    PRELOAD    STOPCMD
+	echo "$ID","$CHANNEL","$DUCK","$GAIN","$LOOP","$STOP", \"""$fname\""", \"""$indexedfile\""","$GROUP","$SHAKER","$SERIAL","$PRELOAD","$STOPCMD" >> Altsound/altsound.csv
+        echo "folder_match :  $foldername"
+        echo "file_match :    $filename"
+        echo "folder_name :   $folder"
+        echo "original_name : $file"
+        echo "newfile :       $newfile"
+	echo "fixedfile:      $fixedfile"
+        echo "csv_name  :     $filewrite"
+
+   fi
+done
+
+   fi
+	done
+done < $INPUT
+
+IFS=$OLDIFS
+
+# List newly generated consolodated files
+
+rsync -a tmp_$FOLDER/ Altsound
+echo -e "\e[42m  ###########################   \e[0m"
+echo -e "\e[42m  ###   FILES GENERATED   ###   \e[0m"
+echo -e "\e[42m  ###########################   \e[0m"
+ls -la tmp_$FOLDER
+
+read -p "Press any key to continue... " -n1 -s
+
+./$(basename $0) && exit
+}
+
+# end of Parser function
+
+# zip compression function
+
+compress_folder ()
+	{
+	profilename=$(\
+	dialog --title "Create Profile" \
+	--inputbox "Enter new profile name:" 8 40 \
+	3>&1 1>&2 2>&3 3>&- \
+	)
+	exitStatus=$?
+	if [[ $exitStatus != 1 ]]
+		then
+		mkdir $profilename
+		folder="Altsound"
+		cp -R Altsound/* $profilename
+		(zip -qr - $profilename | pv -n -s $(du -sb $profilename | awk '{print $1}') > $profilename.zip) 2>&1 | dialog --gauge "Writing sound profile to "$profilename".zip" 7 70
+		mv $profilename $profilename.bak
+	fi
+	./$(basename $0) && exit
+	}
+
+# Dependency checker/installer
+# if dependencies are not installed prompt to install them
+
+package=( "dialog" "ffmpeg" "pv" )
+
+for i in "${package[@]}"
+do
+
+REQUIRED_PKG="$i"
+PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $REQUIRED_PKG|grep "install ok installed")
+echo Checking for $REQUIRED_PKG: $PKG_OK
+if [ "" = "$PKG_OK" ]; then
+  echo "No $REQUIRED_PKG. Setting up $REQUIRED_PKG."
+  sudo apt-get --yes install $REQUIRED_PKG
+fi
+
+done
+
+# Main dialog/prompt for input
+
+HEIGHT=18
+WIDTH=65
+CHOICE_HEIGHT=10
+BACKTITLE="Pinball Sound Folders to Altsound Converter"
+TITLE="Folder to parse"
+MENU="Choose one of the following options:"
+
+OPTIONS=(music "Parse music folder"
+         jingle "Parse jingle folder"
+	 sfx "Parse sound effects folder"
+	 single "Parse single folder"
+         voice "Parse voice folder"
+	 sort "Sort and clean csv"
+	 convert "Convert parsed Altsound folder .ogg to .wav"
+	 compress "Compress Altsound folder to zip"
+	 choose_convert "Choose a folder to convert .ogg to .wav"
+	 Quit "Exit program")
+
+CHOICE=$(dialog --no-cancel \
+		--clear \
+                --backtitle "$BACKTITLE" \
+                --title "$TITLE" \
+                --menu "$MENU" \
+		$HEIGHT $WIDTH $CHOICE_HEIGHT \
+                "${OPTIONS[@]}" \
+                2>&1 >/dev/tty)
+
+case $CHOICE in
+
+        "music")
+		parser "$CHOICE"
+           ;;
+
+        "jingle")
+		parser "$CHOICE"
+            ;;
+
+        "sfx")
+		parser "$CHOICE"
+            ;;
+
+        "single")
+		parser "$CHOICE"
+            ;;
+
+        "voice")
+		parser "$CHOICE"
+            ;;
+
+	"sort")
+		clear
+		cd Altsound
+		sed -i 1d altsound.csv  # remove 1st line for sorting
+		sort -k1 -n -t, altsound.csv > newsound.csv  # sort by first column acending
+        	sort -t, -u -k7,7 newsound.csv > altsound.csv  # check for duplicate sound file entries
+        	sed -i 1i"\"ID\",\"CHANNEL\",\"DUCK\",\"GAIN\",\"LOOP\",\"STOP\",\"NAME\",\"FNAME\",\"GROUP\",\"SHAKER\",\"SERIAL\".\"PRELOAD\",\"STOPCMD\"" altsound.csv  # replace headers
+        	rm newsound.csv  # remove temp file
+        	cd ..
+       		./$(basename $0) && exit
+	    ;;
+
+	"convert")
+                clear
+                cd Altsound
+                for i in *.wav; do ffmpeg -i "$i" "${i%.*}.ogg" -y; done
+                find -type f -name '*.wav' -exec rm {} +
+                sed -i 's/.wav/.ogg/g' altsound.csv
+                echo "Altsound folder contents"
+                ls -la
+                cd ..
+                read -p "Press any key to continue... " -n1 -s
+                ./$(basename $0) && exit
+            ;;
+
+	"compress")
+		clear
+		compress_folder
+		./$(basename $0) && exit
+	    ;;
+
+	"choose_convert")
+		clear
+		TARGET=$(dialog --stdout --title "Arrows move cursor / spacebar to select" --dselect ~/ 14 48)
+		exitStatus=$?
+		if [[ $exitStatus != 1 ]]
+		then
+		cwd=$(pwd)
+		cd "$TARGET"
+		for i in *.ogg; do ffmpeg -i "$i" "${i%.*}.wav" -y; done
+		find -type f -name '*.ogg' -exec rm {} +
+		sed -i 's/.ogg/.wav/g' altsound.csv
+		echo "Converted folder contents"
+		ls -la
+		cd "$cwd"
+		read -p "Press any key to continue... " -n1 -s
+		./$(basename $0) && exit
+		fi
+		./$(basename $0) && exit
+	    ;;
+
+        "Quit")
+		clear
+		echo "Altsound folder contents"
+		ls -la Altsound
+		exit
+            ;;
+
+esac
