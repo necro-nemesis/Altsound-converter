@@ -50,20 +50,21 @@ esac
 
 clear
 
-# test if altsound file exists otherwise create a new one and populate definitions
+# test if altsound and/or file exists otherwise create a new ones and populate definitions
+
+if [ ! -d Altsound ]; then
+   mkdir -p Altsound;
+fi
 
 if [ ! -f Altsound/altsound.csv ]
 then
-    touch Altsound/altsound.csv
-    echo \"ID\",\"CHANNEL\",\"DUCK\",\"GAIN\",\"LOOP\",\"STOP\",\"NAME\",\"FNAME\",\"GROUP\",\"SHAKER\",\"SERIAL\".\"PRELOAD\",\"STOPCMD\" >> Altsound/altsound.csv
-
+   touch Altsound/altsound.csv
+   echo \"ID\",\"CHANNEL\",\"DUCK\",\"GAIN\",\"LOOP\",\"STOP\",\"NAME\",\"FNAME\",\"GROUP\",\"SHAKER\",\"SERIAL\".\"PRELOAD\",\"STOPCMD\" >> Altsound/altsound.csv
 fi
 
 
 # Set variables for parse
 
-FOLDER="$1"
-echo "$FOLDER"
 TYPE="${CHOICE2}"
 INPUT=altsound.csv
 OLDIFS=$IFS
@@ -71,12 +72,8 @@ IFS=','
 
 # Create folders
 
-if [ ! -d tmp_$FOLDER ]; then
-  mkdir -p tmp_$FOLDER;
-fi
-
-if [ ! -d Altsound ]; then
-  mkdir -p Altsound;
+if [ ! -d tmp_"$(echo "$1")" ]; then
+  mkdir -p tmp_"$(echo "$1")";
 fi
 
 # Parse files matching folder names to csv file names
@@ -84,14 +81,8 @@ fi
 [ ! -f $INPUT ] && { echo "$INPUT file not found"; exit 99; }
 while read ID CHANNEL DUCK GAIN LOOP STOP NAME FNAME GROUP SHAKER SERIAL PRELOAD STOPCMD
 do
-        holder="$(echo "$FNAME" | sed -n 's/[^-]*-//p')"
-	filename="$(echo "$holder" | sed 's/\.[^.]*$//')"
-	writename="$(echo "$FNAME"  | tr -d '"')"
-	filewrite="$(echo "$writename" | sed "s/^[ \t]*//")"
-find  ./$FOLDER -type d -mindepth 1 -maxdepth 1 | while read folder; do
-	foldername="$(echo "$folder" | sed -n 's/[^-]*-//p')"
-   if [[ $filename == $foldername ]] ;
-	then
+	filename="$(echo "$FNAME" | sed -n 's/[^-]*-//p' | sed 's/\.[^.]*$//')"
+find ./$1 -type d -mindepth 1 -maxdepth 1 -name "$(echo *"$filename")" | while read folder; do
 for file in ./$folder/*
 
 # On match write file to new "tmp_*" using csv matched name
@@ -99,33 +90,21 @@ for file in ./$folder/*
 do
    if [[ $file == *.$CHOICE2 ]]
 	then
-        newfile="$(echo "$file" | sed 's|.*/||')"
-        filewrite="$(echo "$filewrite" | sed "s/\."$CHOICE2".*/."$CHOICE2"/")"
-	fixedfile="$(echo "$newfile" | sed -e 's/[^A-Za-z0-9._-]/_/g')"
-		if [[ $file != "$(echo ./"$folder"/"$fixedfile")" ]]
-		then
-		mv $file "$folder"/"$fixedfile"
-		fi
-	idtemp="$(echo "$ID" | tr -d '"')"
-	fname="$(echo "$fixedfile" | sed 's/\.[^.]*$//')"
-	indexedfile="$(echo "$fixedfile" | sed -e "s/^/"$idtemp"-/")"
-        cp "$(echo ./"$folder"/"$fixedfile")" ./tmp_$FOLDER/"$indexedfile"
+	fname="$(echo "$file" | sed 's|.*/||' | sed -e 's/[^A-Za-z0-9._-]/_/g' | sed 's/\.[^.]*$//')"
+	indexedfile="$(echo "$file" | sed 's|.*/||' | sed -e 's/[^A-Za-z0-9._-]/_/g' | sed -e "s/^/"$(echo "$ID" | tr -d '"')"-/")"
+        cp "$(echo "$file")" "$(echo ./tmp_"$1"/"$indexedfile")"
 
 # Generate altsound.cvs enties for file
 #              ID   CHANNEL     DUCK    GAIN    LOOP    STOP        NAME              FNAME          GROUP     SHAKER   SERIAL    PRELOAD    STOPCMD
 	echo "$ID","$CHANNEL","$DUCK","$GAIN","$LOOP","$STOP", \"""$fname\""", \"""$indexedfile\""","$GROUP","$SHAKER","$SERIAL","$PRELOAD","$STOPCMD" >> Altsound/altsound.csv
-        echo "folder_match :  $foldername"
         echo "file_match :    $filename"
         echo "folder_name :   $folder"
         echo "original_name : $file"
-        echo "newfile :       $newfile"
-	echo "fixedfile:      $fixedfile"
-        echo "csv_name  :     $filewrite"
+	echo "fname:          $fname"
+        echo "csv_name  :     $indexedfile"
 
    fi
 done
-
-   fi
 	done
 done < $INPUT
 
@@ -133,11 +112,11 @@ IFS=$OLDIFS
 
 # List newly generated consolodated files
 
-rsync -a tmp_$FOLDER/ Altsound
+rsync -a "$(echo tmp_"$1")"/ Altsound
 echo -e "\e[42m  ###########################   \e[0m"
 echo -e "\e[42m  ###   FILES GENERATED   ###   \e[0m"
 echo -e "\e[42m  ###########################   \e[0m"
-ls -la tmp_$FOLDER
+ls -la tmp_"$(echo "$1")"
 
 read -p "Press any key to continue... " -n1 -s
 
@@ -239,13 +218,13 @@ case $CHOICE in
 	"sort")
 		clear
 		cd Altsound
-		sed -i 1d altsound.csv  # remove 1st line for sorting
+		sed -i '/STOPCMD/d' altsound.csv  # remove all header entries
 		sort -k1 -n -t, altsound.csv > newsound.csv  # sort by first column acending
-        	sort -t, -u -k7,7 newsound.csv > altsound.csv  # check for duplicate sound file entries
-        	sed -i 1i"\"ID\",\"CHANNEL\",\"DUCK\",\"GAIN\",\"LOOP\",\"STOP\",\"NAME\",\"FNAME\",\"GROUP\",\"SHAKER\",\"SERIAL\".\"PRELOAD\",\"STOPCMD\"" altsound.csv  # replace headers
-        	rm newsound.csv  # remove temp file
-        	cd ..
-       		./$(basename $0) && exit
+		sort --field-separator='"' --key=4 -n newsound.csv > altsound.csv
+		sed -i 1i"\"ID\",\"CHANNEL\",\"DUCK\",\"GAIN\",\"LOOP\",\"STOP\",\"NAME\",\"FNAME\",\"GROUP\",\"SHAKER\",\"SERIAL\".\"PRELOAD\",\"STOPCMD\"" altsound.csv  # replace headers
+		rm newsound.csv  # remove temp file
+		cd ..
+		./$(basename $0) && exit
 	    ;;
 
 	"convert")
