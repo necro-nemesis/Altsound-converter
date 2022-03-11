@@ -74,14 +74,8 @@ fi
 [ ! -f $INPUT ] && { echo "$INPUT file not found"; exit 99; }
 while read ID CHANNEL DUCK GAIN LOOP STOP NAME FNAME GROUP SHAKER SERIAL PRELOAD STOPCMD
 do
-        holder="$(echo "$FNAME" | sed -n 's/[^-]*-//p')"
-	filename="$(echo "$holder" | sed 's/\.[^.]*$//')"
-	writename="$(echo "$FNAME"  | tr -d '"')"
-	filewrite="$(echo "$writename" | sed "s/^[ \t]*//")"
-find  ./$FOLDER -type d -mindepth 1 -maxdepth 1 | while read folder; do
-	foldername="$(echo "$folder" | sed -n 's/[^-]*-//p')"
-   if [[ $filename == $foldername ]] ;
-	then
+	filename="$(echo "$FNAME" | sed -n 's/[^-]*-//p' | sed 's/\.[^.]*$//')"
+find ./$1 -type d -mindepth 1 -maxdepth 1 -name "$(echo *"$filename")" | while read folder; do
 for file in ./$folder/*
 
 # On match write file to new "tmp_*" using csv matched name
@@ -90,9 +84,10 @@ do
    if [[ $file == *.$CHOICE2 ]]
 	then
 	newfile="$(echo "$file" | sed 's|.*/||')"
-	filewrite="$(echo "$filewrite" | sed "s/\."$CHOICE2".*/."$CHOICE2"/")"
+	filewrite="$(echo "$FNAME"  | tr -d '"' |  sed "s/^[ \t]*//" | sed "s/\."$CHOICE2".*/."$CHOICE2"/")"
+
 	cp $file ./tmp_$FOLDER/"$filewrite"
-        echo "folder_match :  $foldername"
+
         echo "file_match :    $filename"
         echo "folder_name :   $folder"
 	echo "original_name : $file"
@@ -100,8 +95,6 @@ do
 	echo "csv_name  :     $filewrite"
    fi
 done
-
-   fi
 
 	done
 done < $INPUT
