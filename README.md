@@ -21,7 +21,7 @@ Digger will generate a new altsound profile with new altsound.csv entries for al
 - To create a full altsound profile parse all 5 file types (music, jingle, sfx, single and voice).
 - Sound profile will be saved to /Altsound folder and include a copy of the altsound.csv file used to parse with.
 - If you wish to convert the completed Altsound profile in the /Altsound folder, use the "convert" option once all folders are parsed. Selecting this option not only converts the sound files but also appropriately edits the altsound.csv to match.
-- Some altsound.csv files have duplicate address sounds listed which can be desireable or in some edge cases cause issues. The "duplicates" option discusses how to determine and resolve where edge case problems may reside and lists all duplicate entries from the source altsound.csv file to alert for a potential edge case problem.
+- Some altsound.csv files have duplicate name fields (FNAME) listed which can be desireable when intentially associated with different sound files or in some edge cases can cause issues with the wrong sound being played when associated with the wrong file. The "duplicates" option discusses how to determine and resolve where edge case problems may reside and lists all duplicate entries from the source altsound.csv file to alert for a potential edge case problem.
 - For upload purposes the finished Altsound profile can be zipped using the compression option. This allows you to also specify the profile name which will be the folder name and zip file name after the option is finished.
 
  
