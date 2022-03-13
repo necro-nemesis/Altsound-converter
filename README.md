@@ -7,7 +7,7 @@ Conversion tool for converting file based sounds to Altsound format
 
 Sorter and digger are used independently depending on the desitred outcome you are looking for. 
 
-Sorter will provide a morror copy of the source supplied altsound.csv file to be referenced by the newly gnerated altsound profile. When using sorter it therefore preserves the original references for commonality with the original sound profile it was pulled from. In doing so it isn't able to add in additional random sounds to be referenced that may have been added by sound profile creators. The end result is likely to require less manual editting but lack some additional variety that may be available.
+Sorter will provide a mirror copy of the source supplied altsound.csv file to be referenced by the newly gnerated altsound profile. When using sorter it therefore preserves the original references for commonality with the original sound profile it was pulled from. In doing so it isn't able to add in additional random sounds to be referenced that may have been added by sound profile creators. The end result is likely to require less manual editting but lack some additional variety that may be available.
 
 Digger will generate a new altsound profile with new altsound.csv entries for all sound files it is able to associate. It incrementally "digs" through sound folders and indexes each sound file it finds to it's a csv entry and exclusive sound file name. It will capture all sound files available and reference them. The negative aspect of this is the the newly generated .csv file will not be congruent with the original ROM folder file.
 
