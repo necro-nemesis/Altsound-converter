@@ -1,7 +1,16 @@
 # Altsound-converter
 Conversion tool for converting file based sounds to Altsound format
 
-### Linux script for matching folder based sound files to existing altsound.csv files. ###
+### Linux scripts for matching folder based sound files to existing altsound.csv files. ###
+
+### Digger vs Sorter scripts ###
+
+Digger and sorter are used indpendently depending on the desitred outcome you are looking for. 
+
+Sorter will provide a copy of the source supplied altsound.cvs file to reference the altsound profile. In when using sorter it therefore preserves the original references for commonality of references to the original sound profile. In doing so it isn't able to add in additional random sounds that may have been added by sound profile creators. The end result is likely to require less manually editting but lack some additional variety that may be available.
+
+Digger will generate a new altsound profile with new entries for all sound files it is able to associate. It incrementally "digs" through sound folders and indexes each sound file it finds to it's a cvs entry and exclusive sound file name. It will capture all sound files available and reference them. The negative aspect of this is the the newly generated .cvs file will not be congruent with the original ROM folder file.
+
 - Copy script contents to file and make executable with ```chmod +x sorter```
 - Place the script in a folder with the altsound.csv file and the 5 sound file subfolders.
 - The script will prompt for installation of depnedencies dialog, ffmpeg and pv if they are not previously installed. dialog is required for running the program menu system, ffmpeg for .ogg to .wav conversion and pv for the zip file progress indicator.
