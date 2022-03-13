@@ -5,7 +5,7 @@ Conversion tool for converting file based sounds to Altsound format
 
 ### Use of Sorter vs Digger scripts ###
 
-Sorter and digger are used indpendently depending on the desitred outcome you are looking for. 
+Sorter and digger are used independently depending on the desitred outcome you are looking for. 
 
 Sorter will provide a morror copy of the source supplied altsound.csv file to be referenced by the newly gnerated altsound profile. When using sorter it therefore preserves the original references for commonality with the original sound profile it was pulled from. In doing so it isn't able to add in additional random sounds to be referenced that may have been added by sound profile creators. The end result is likely to require less manual editting but lack some additional variety that may be available.
 
