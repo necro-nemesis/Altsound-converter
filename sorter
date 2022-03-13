@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 
 ###############################################################################
 ####  Transfer and associate pinball folder sound files with Altsound.csv  ####
@@ -159,7 +159,7 @@ done
 
 HEIGHT=18
 WIDTH=65
-CHOICE_HEIGHT=9
+CHOICE_HEIGHT=11
 BACKTITLE="Pinball Sound Folders to Altsound Converter"
 TITLE="Folder to parse"
 MENU="Choose one of the following options:"
@@ -169,6 +169,8 @@ OPTIONS=(music "Parse music folder"
 	 sfx "Parse sound effects folder"
 	 single "Parse single folder"
          voice "Parse voice folder"
+	 duplicates "List duplicate source csv references"
+	 sort "Sort and clean csv"
 	 convert "Convert parsed Altsound folder .ogg to .wav"
 	 compress "Compress Altsound folder to zip"
 	 choose_convert "Choose a folder to convert .ogg to .wav"
@@ -205,12 +207,39 @@ case $CHOICE in
 		parser "$CHOICE"
             ;;
 
+	"duplicates")
+
+		clear
+		dialog --title 'Duplicate Entry Information' --msgbox \
+"Duplicate entries in the altsound.cvs source file my be intentional or unintentional which can lead to deriable or underdesirable results respectively. When intentionally used and desireable
+it is to provide randomly selected sounds for a the same event. In these instances the sounds will be relevent to the event. In some situations though it may be that a sound is named identically
+for two distinct events. For example a \"Jackpot\" named voice call may also be named \"Jackpot\" for the music file played with the Jackpot event. The ambuguity of duplicate names in this
+undesired instance is rare but can be resolved by listening to the playback of the sound samples and manually changing the sound file name and cvs entry to be exclusive thereby specifically
+referencing the desired sound file. The following is a list of files that should be reviewed to see if they are desireable or undesireable duplicates. This makes no changes to any of the entries
+of files just lists potential issues \n\nIn general undesireable duplicates will be evident when duplicate names are found in two separate areas of the source cvs files as opposed to being
+grouped together where they are used for randomization intentionally." 19 100
+		awk -F, '!a[$7]++{next} {print "Line " NR " " $7 " is duplicated"}' altsound.csv | more | dialog --title "Duplicate Source altsound.cvs Names" "$@" --programbox 60 70
+		./$(basename $0) && exit
+	    ;;
+
+	"sort")
+		clear
+		cd Altsound
+		sed -i '/STOPCMD/d' altsound.csv  # remove all header entries
+		sort -k1 -n -t, altsound.csv > newsound.csv  # sort by first column acending
+		sort --field-separator='"' --key=4 -n newsound.csv > altsound.csv
+		sed -i 1i"\"ID\",\"CHANNEL\",\"DUCK\",\"GAIN\",\"LOOP\",\"STOP\",\"NAME\",\"FNAME\",\"GROUP\",\"SHAKER\",\"SERIAL\".\"PRELOAD\",\"STOPCMD\"" altsound.csv  # replace headers
+		rm newsound.csv  # remove temp file
+		cd ..
+		./$(basename $0) && exit
+	    ;;
+
 	"convert")
                 clear
                 cd Altsound
-                for i in *.ogg; do ffmpeg -i "$i" "${i%.*}.wav" -y; done
-                find -type f -name '*.ogg' -exec rm {} +
-                sed -i 's/.ogg/.wav/g' altsound.csv
+                for i in *.wav; do ffmpeg -i "$i" "${i%.*}.ogg" -y; done
+                find -type f -name '*.wav' -exec rm {} +
+                sed -i 's/.wav/.ogg/g' altsound.csv
                 echo "Altsound folder contents"
                 ls -la
                 cd ..
