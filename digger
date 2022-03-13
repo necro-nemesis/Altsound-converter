@@ -217,7 +217,6 @@ case $CHOICE in
             ;;
 
 	"duplicates")
-
 		clear
 		dialog --title 'Duplicate Entry Information' --msgbox \
 "Duplicate entries in the altsound.cvs source file my be intentional or unintentional which can lead to deriable or underdesirable results respectively. When intentionally used and desireable
@@ -225,11 +224,22 @@ it is to provide randomly selected sounds for a the same event. In these instanc
 for two distinct events. For example a \"Jackpot\" named voice call may also be named \"Jackpot\" for the music file played with the Jackpot event. The ambuguity of duplicate names in this
 undesired instance is rare but can be resolved by listening to the playback of the sound samples and manually changing the sound file name and cvs entry to be exclusive thereby specifically
 referencing the desired sound file. The following is a list of files that should be reviewed to see if they are desireable or undesireable duplicates. This makes no changes to any of the entries
-of files just lists potential issues \n\nIn general undesireable duplicates will be evident when duplicate names are found in two separate areas of the source cvs files as opposed to being
-grouped together where they are used for randomization intentionally." 19 100
+of files just lists potential issues \n\nIn general undesireable duplicates will be evident when duplicate names are found in two separate areas of the source cvs files i.e. not adjacent addresses, as opposed to being
+grouped together where they are used for randomization intentionally. A duplicate report will be writtent to a duplicate_report.txt file to help assist identifying these instances." 20 100
 		awk -F, '!a[$7]++{next} {print "Line " NR " " $7 " is duplicated"}' altsound.csv | more | dialog --title "Duplicate Source altsound.cvs Names" "$@" --programbox 60 70
+		awk -F, 'NR==FNR{a[$7]++; next} a[$7]>1' altsound.csv altsound.csv > duplicate_report.txt
+		sed -i '1s/^/   DUPLICATE ENTRY REPORT\n \
+		   Use your file search to search for all folder \
+		   entries that have the same column 7 name. \
+		   Playback the sounds and identify the desired \
+		   sound then alter the file name to be unique, \
+		   copy it to the Altsound folder and edit the associated entry \
+		   in column 8 of altsound.csv to the new file name\n\n/' duplicate_report.txt
+		dialog --title 'Duplicate Entry Report' --msgbox \
+"A duplicate entry report \"duplicate_report.txt\" has been generated." 7 50
 		./$(basename $0) && exit
 	    ;;
+
 
 	"sort")
 		clear
