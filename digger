@@ -256,9 +256,9 @@ grouped together where they are used for randomization intentionally. A duplicat
 	"convert")
                 clear
                 cd Altsound
-                for i in *.wav; do ffmpeg -i "$i" "${i%.*}.ogg" -y; done
-                find -type f -name '*.wav' -exec rm {} +
-                sed -i 's/.wav/.ogg/g' altsound.csv
+                for i in *.ogg; do ffmpeg -i "$i" "${i%.*}.wav" -y; done
+                find -type f -name '*.ogg' -exec rm {} +
+                sed -i 's/.ogg/.wav/g' altsound.csv
                 echo "Altsound folder contents"
                 ls -la
                 cd ..
