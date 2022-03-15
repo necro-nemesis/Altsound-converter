@@ -171,7 +171,7 @@ OPTIONS=(music "Parse music folder"
          voice "Parse voice folder"
 	 duplicates "List duplicate source csv references"
 	 sort "Sort and clean csv"
-	 convert "Convert parsed Altsound folder .ogg to .wav"
+	 convert "Convert Altsound folder .ogg or .wav"
 	 compress "Compress Altsound folder to zip"
 	 choose_convert "Choose a folder to convert .ogg to .wav"
 	 Quit "Exit program")
@@ -244,15 +244,30 @@ grouped together where they are used for randomization intentionally. A duplicat
 	    ;;
 
 	"convert")
-                clear
-                cd Altsound
-                for i in *.ogg; do ffmpeg -i "$i" "${i%.*}.wav" -y; done
-                find -type f -name '*.ogg' -exec rm {} +
-                sed -i 's/.ogg/.wav/g' altsound.csv
-                echo "Altsound folder contents"
+		encoding=$(dialog --menu "Choose conversion type:" 0 0 0 1 "ogg to wav" 2 "wav to ogg" 3>&1 1>&2 2>&3)
+		exitStatus=$?
+                if [[ $exitStatus != 1 ]]
+                then
+			if [[ $encoding = 1 ]]
+			then
+			formatin="ogg"
+			formatout="wav"
+			else
+			formatin="wav"
+			formatout="ogg"
+                	fi
+		clear
+		cd Altsound
+                for i in *.$formatin; do ffmpeg -i "$i" "${i%.*}."$formatout"" -y; done
+		find -type f -name "*."$formatin"" -exec rm {} +
+                sed -i "s/."$formatin"/."$formatout"/g" altsound.csv
+		read -p "Press any key to continue... " -n1 -s
+		echo "Altsound folder contents"
                 ls -la
                 cd ..
                 read -p "Press any key to continue... " -n1 -s
+                ./$(basename $0) && exit
+		 fi
                 ./$(basename $0) && exit
             ;;
 
